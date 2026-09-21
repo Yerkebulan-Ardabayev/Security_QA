@@ -128,3 +128,30 @@ describe('источники и стиль', () => {
     expect(data.questions.length).toBe(total);
   });
 });
+
+describe('практические разделы дают команды', () => {
+  // Сайт готовит к учёбе и работе, а не только к разговору на собеседовании.
+  // В практических разделах должно быть не меньше указанного числа ответов
+  // с реальной командой (<pre><code> или инлайновый <code>). Порог намеренно
+  // ниже фактического покрытия: он стережёт от возврата к чисто описательным
+  // ответам, но не заставляет вставлять команду в концептуальный вопрос.
+  const MIN_WITH_CODE: Record<string, number> = {
+    'Основы безопасности': 20,
+    'DevSecOps и AppSec': 20,
+    'Безопасность облака, контейнеров и Kubernetes': 20,
+    'Blue team и SOC': 15,
+    'DFIR и форензика': 12,
+    'Пентест и offensive-основы': 5,
+  };
+
+  const withCode = (category: string) =>
+    data.questions.filter((q) => q.category === category && /<pre|<code/.test(q.answer)).length;
+
+  for (const [category, min] of Object.entries(MIN_WITH_CODE)) {
+    it(`«${category}»: не меньше ${min} ответов с командой`, () => {
+      // Раздел должен существовать, иначе опечатка в названии тихо пройдёт.
+      expect(data.categories).toContain(category);
+      expect(withCode(category)).toBeGreaterThanOrEqual(min);
+    });
+  }
+});
