@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevSecOps: гайд уровня сеньор</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --line:#2b3444; --line2:#3a4658;
+  --ink:#e6edf3; --muted:#9aa7b8; --faint:#6b7787;
+  --accent:#4aa8ff; --accent2:#7ee0c0; --warn:#ffb454; --bad:#ff6b6b; --good:#5ee08a;
+  --code-bg:#0b1020; --tag:#22304a;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+:root[data-theme="light"]{
+  --bg:#f6f8fa; --panel:#ffffff; --panel2:#f0f3f7; --line:#d6dde6; --line2:#c3ccd8;
+  --ink:#1a2029; --muted:#4d5a6a; --faint:#7a8698;
+  --accent:#0969da; --accent2:#0f9d76; --warn:#b4690e; --bad:#cf2222; --good:#1a7f37;
+  --code-bg:#0b1020; --tag:#e4eaf2;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.layout{display:grid;grid-template-columns:300px 1fr;gap:0;max-width:1400px;margin:0 auto}
+
+/* sidebar */
+.side{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);
+  padding:22px 18px 60px;background:var(--panel)}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:grid;place-items:center;color:#04121f;font-weight:800;font-family:var(--mono);font-size:15px}
+.brand h1{font-size:16px;margin:0;letter-spacing:.2px}
+.brand small{color:var(--faint);font-size:12px}
+.toc{margin-top:16px;font-size:14px}
+.toc a{display:block;color:var(--muted);padding:5px 10px;border-radius:7px;border-left:2px solid transparent}
+.toc a:hover{background:var(--panel2);text-decoration:none;color:var(--ink)}
+.toc a.active{color:var(--ink);background:var(--panel2);border-left-color:var(--accent)}
+.toc .grp{color:var(--faint);text-transform:uppercase;font-size:11px;letter-spacing:.9px;
+  margin:16px 0 6px;padding-left:10px}
+
+/* main */
+.main{padding:34px 46px 120px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:10px}
+.hero h2{font-size:30px;margin:.1em 0 .2em;letter-spacing:-.4px}
+.hero p.lead{color:var(--muted);font-size:17px;max-width:70ch;margin:.2em 0}
+.btns{display:flex;gap:8px;flex-shrink:0}
+.btn{background:var(--panel);border:1px solid var(--line2);color:var(--ink);border-radius:9px;
+  padding:8px 12px;font-size:13px;cursor:pointer;font-family:var(--sans)}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+
+section{scroll-margin-top:20px;padding:26px 0;border-top:1px solid var(--line)}
+section:first-of-type{border-top:none}
+h3{font-size:23px;margin:.2em 0 .5em;letter-spacing:-.2px;display:flex;gap:10px;align-items:baseline}
+h3 .n{font-family:var(--mono);color:var(--accent);font-size:15px;flex-shrink:0}
+h4{font-size:17px;margin:1.3em 0 .4em;color:var(--ink)}
+p{margin:.55em 0}
+ul,ol{margin:.5em 0;padding-left:22px}
+li{margin:.28em 0}
+strong{color:var(--ink);font-weight:650}
+.muted{color:var(--muted)}
+
+/* callouts */
+.box{border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin:14px 0;background:var(--panel)}
+.box .lab{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+  padding:2px 9px;border-radius:20px;margin-bottom:7px}
+.box.rule{border-left:3px solid var(--accent)}
+.box.rule .lab{background:rgba(74,168,255,.16);color:var(--accent)}
+.box.why{border-left:3px solid var(--accent2);background:var(--panel2)}
+.box.why .lab{background:rgba(126,224,192,.16);color:var(--accent2)}
+.box.anti{border-left:3px solid var(--bad)}
+.box.anti .lab{background:rgba(255,107,107,.16);color:var(--bad)}
+.box.check{border-left:3px solid var(--good)}
+.box.check .lab{background:rgba(94,224,138,.16);color:var(--good)}
+.box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+
+/* code */
+figure.code{margin:14px 0;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--code-bg)}
+figure.code figcaption{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 12px;background:#0a0f1c;border-bottom:1px solid #1b2436;color:#8ea0bd;
+  font-family:var(--mono);font-size:12px}
+:root[data-theme="light"] figure.code figcaption{background:#0a0f1c}
+figure.code pre{margin:0;padding:14px 16px;overflow-x:auto}
+figure.code code{font-family:var(--mono);font-size:13px;line-height:1.6;color:#d6e2f5;white-space:pre}
+.copy{background:transparent;border:1px solid #2b3650;color:#9fb2d0;border-radius:6px;
+  padding:3px 9px;font-size:11px;cursor:pointer;font-family:var(--sans)}
+.copy:hover{border-color:var(--accent);color:var(--accent)}
+.copy.ok{color:var(--good);border-color:var(--good)}
+code.inl{font-family:var(--mono);font-size:.88em;background:var(--tag);padding:1px 6px;border-radius:5px;color:var(--ink)}
+
+/* tables */
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--panel2);font-weight:650}
+tr:nth-child(even) td{background:var(--panel)}
+
+/* diagrams */
+.fig{margin:18px 0;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:16px}
+.fig svg{display:block;width:100%;height:auto}
+.fig .cap{color:var(--faint);font-size:13px;margin-top:8px;text-align:center}
+.d-box{fill:var(--panel2);stroke:var(--line2)}
+.d-ac{fill:rgba(74,168,255,.14);stroke:var(--accent)}
+.d-gd{fill:rgba(94,224,138,.13);stroke:var(--good)}
+.d-wn{fill:rgba(255,180,84,.14);stroke:var(--warn)}
+.d-bd{fill:rgba(255,107,107,.13);stroke:var(--bad)}
+.d-t{fill:var(--ink);font-family:var(--sans);font-size:13px}
+.d-s{fill:var(--muted);font-family:var(--sans);font-size:11px}
+.d-m{fill:var(--mono);font-family:var(--mono);font-size:11px}
+.d-l{stroke:var(--line2);stroke-width:1.6;fill:none}
+.d-la{stroke:var(--accent);stroke-width:1.8;fill:none}
+
+.src{font-size:13px;color:var(--muted);margin-top:16px;border-top:1px dashed var(--line);padding-top:10px}
+.src b{color:var(--ink);font-weight:600}
+.src a{margin-right:2px}
+.pill{display:inline-block;font-family:var(--mono);font-size:11px;background:var(--tag);
+  border:1px solid var(--line);border-radius:6px;padding:1px 7px;margin:2px 3px 2px 0;color:var(--muted)}
+
+footer{color:var(--faint);font-size:13px;border-top:1px solid var(--line);padding-top:18px;margin-top:30px}
+
+.menu-btn{display:none}
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .side{position:fixed;z-index:40;width:290px;left:-300px;transition:left .2s;box-shadow:0 0 40px rgba(0,0,0,.4)}
+  .side.open{left:0}
+  .main{padding:20px 16px 100px}
+  .menu-btn{display:inline-block}
+  .hero h2{font-size:24px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side" id="side">
+  <div class="brand">
+    <div class="logo">DS</div>
+    <div><h1>DevSecOps</h1><small>гайд уровня сеньор</small></div>
+  </div>
+  <nav class="toc" id="toc">
+    <div class="grp">Фундамент</div>
+    <a href="#intro">0. Что такое DevSecOps</a>
+    <a href="#principles">1. Принципы проектирования</a>
+    <a href="#threat">2. Модель угроз (STRIDE)</a>
+    <a href="#ssdlc">3. Жизненный цикл (SSDLC)</a>
+    <div class="grp">Разработка</div>
+    <a href="#code">4. Код и репозиторий</a>
+    <a href="#supply">5. Цепочка поставок и SLSA</a>
+    <a href="#build">6. Сборка и образы</a>
+    <a href="#cicd">7. Пайплайн CI/CD</a>
+    <div class="grp">Инфраструктура</div>
+    <a href="#iac">8. Инфраструктура как код</a>
+    <a href="#k8s">9. Контейнеры и Kubernetes</a>
+    <a href="#secrets">10. Секреты</a>
+    <div class="grp">Проверка и эксплуатация</div>
+    <a href="#testing">11. Тестирование безопасности</a>
+    <a href="#runtime">12. Прод, мониторинг, инциденты</a>
+    <a href="#vulnmgmt">13. Управление уязвимостями</a>
+    <div class="grp">Зрелость</div>
+    <a href="#governance">14. Governance и метрики</a>
+    <a href="#roadmap">15. Дорожная карта до сеньора</a>
+    <a href="#checklist">16. Чек-лист и источники</a>
+  </nav>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div class="hero">
+      <button class="btn menu-btn" id="menuBtn">☰ Разделы</button>
+      <h2>DevSecOps: как правильно и безопасно строить продукты</h2>
+      <p class="lead">Практический справочник для инженера, который хочет держать безопасность
+      встроенной в разработку, а не приклеенной в конце. Слова, готовый код и схемы. Каждый
+      раздел опирается на официальные стандарты и документацию инструментов.</p>
+    </div>
+    <div class="btns">
+      <button class="btn" id="themeBtn" title="Тема">◐ Тема</button>
+    </div>
+  </div>
+
+  <p class="muted" style="font-size:14px">Как читать. <b>Правило</b> это что делать,
+  <b>Почему</b> это причина и риск, <b>Антипаттерн</b> это как делать нельзя,
+  <b>Проверка</b> это чем убедиться, что контроль работает. Блоки кода копируются кнопкой справа.
+  Статус утверждений, стандарты помечены как источник, остальное это практический вывод из них.</p>
+
+<!-- ==================== 0 ==================== -->
+<section id="intro">
+  <h3><span class="n">00</span> Что такое DevSecOps и зачем он нужен</h3>
+  <p>DevSecOps это встраивание безопасности в тот же автоматизированный поток, в котором
+  DevOps уже собирает, тестирует и разворачивает продукт. Безопасность перестаёт быть
+  отдельным этапом в конце, когда команда за неделю до релиза приносит отчёт, и становится
+  частью каждого шага, от проектирования до эксплуатации.</p>
+
+  <p>В классической модели безопасность работает как шлагбаум, проверили в конце, нашли,
+  вернули на доработку. При частых релизах это не масштабируется, служба безопасности
+  становится узким местом, и её начинают обходить. DevSecOps переносит проверки в пайплайн,
+  разработчик получает обратную связь в пул-реквесте за минуты, а специалисты по безопасности
+  занимаются инструментами, правилами и сложными случаями.</p>
+
+  <div class="box why"><span class="lab">Почему это ядро роли</span>
+  <p>Сеньор-DevSecOps ценен не тем, что поставил сканеры, а тем, что сделал безопасность
+  удобной. Если инструмент даёт сотни ложных срабатываний и валит сборку по пустякам, его
+  отключат, и станет хуже, чем было. Инженерная задача, встроить контроль так, чтобы команда
+  ему доверяла и не искала обход.</p></div>
+
+  <h4>Три несущих принципа</h4>
+  <ul>
+    <li><strong>Shift left, сдвиг влево.</strong> Находить и чинить проблему как можно раньше,
+    в идеале в IDE и пул-реквесте, а не на пентесте перед релизом. Чем позже найдена, тем дороже.</li>
+    <li><strong>Security as code.</strong> Политики, проверки и конфигурация безопасности живут
+    в репозитории, проходят ревью и версионируются так же, как обычный код.</li>
+    <li><strong>Разделяемая ответственность.</strong> За безопасность отвечает вся команда, а не
+    отдельный отдел. Безопасники дают инструменты, стандарты и экспертизу, решения принимают там,
+    где пишут код.</li>
+  </ul>
+
+  <p class="muted">Каркас всего гайда, это восемь этапов жизненного цикла и контроль на каждом.
+  Схема ниже показывает петлю целиком, дальше по разделам разбираем каждый этап.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 920 210" role="img" aria-label="Петля DevSecOps с контролями на каждом этапе">
+      <!-- stages -->
+      <g>
+        <!-- boxes -->
+        <g class="d-box">
+          <rect x="8"  y="70" width="96" height="42" rx="8"/>
+          <rect x="122" y="70" width="96" height="42" rx="8"/>
+          <rect x="236" y="70" width="96" height="42" rx="8"/>
+          <rect x="350" y="70" width="96" height="42" rx="8"/>
+          <rect x="464" y="70" width="96" height="42" rx="8"/>
+          <rect x="578" y="70" width="96" height="42" rx="8"/>
+          <rect x="692" y="70" width="96" height="42" rx="8"/>
+          <rect x="806" y="70" width="96" height="42" rx="8"/>
+        </g>
+        <g class="d-t" text-anchor="middle" font-weight="600">
+          <text x="56"  y="95">Plan</text>
+          <text x="170" y="95">Code</text>
+          <text x="284" y="95">Build</text>
+          <text x="398" y="95">Test</text>
+          <text x="512" y="95">Release</text>
+          <text x="626" y="95">Deploy</text>
+          <text x="740" y="95">Operate</text>
+          <text x="854" y="95">Monitor</text>
+        </g>
+        <!-- arrows -->
+        <g class="d-la">
+          <line x1="104" y1="91" x2="122" y2="91"/><line x1="218" y1="91" x2="236" y2="91"/>
+          <line x1="332" y1="91" x2="350" y2="91"/><line x1="446" y1="91" x2="464" y2="91"/>
+          <line x1="560" y1="91" x2="578" y2="91"/><line x1="674" y1="91" x2="692" y2="91"/>
+          <line x1="788" y1="91" x2="806" y2="91"/>
+        </g>
+        <!-- feedback loop -->
+        <path class="d-la" stroke-dasharray="5 4" d="M854 112 C 854 180, 56 180, 56 112"/>
+        <text class="d-s" x="455" y="176" text-anchor="middle">обратная связь, инцидент возвращает требования в Plan</text>
+        <!-- controls under each -->
+        <g class="d-s" text-anchor="middle">
+          <text x="56"  y="132">threat</text><text x="56" y="145">model</text>
+          <text x="170" y="132">SAST,</text><text x="170" y="145">секреты</text>
+          <text x="284" y="132">SCA, SBOM,</text><text x="284" y="145">подпись</text>
+          <text x="398" y="132">DAST,</text><text x="398" y="145">image scan</text>
+          <text x="512" y="132">verify</text><text x="512" y="145">подписи</text>
+          <text x="626" y="132">policy,</text><text x="626" y="145">admission</text>
+          <text x="740" y="132">runtime,</text><text x="740" y="145">Falco</text>
+          <text x="854" y="132">логи,</text><text x="854" y="145">детект</text>
+        </g>
+        <!-- top labels -->
+        <text class="d-t" x="8" y="40" font-weight="700" font-size="15">Петля DevSecOps</text>
+        <text class="d-s" x="8" y="56">на каждом этапе свой автоматический контроль, ни один не пропускается</text>
+      </g>
+    </svg>
+    <div class="cap">Схема 1. Восемь этапов и встроенный контроль на каждом из них.</div>
+  </div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://csrc.nist.gov/pubs/sp/800/218/final" target="_blank" rel="noopener">NIST SP 800-218 SSDF</a>,
+    <a href="https://owasp.org/www-project-devsecops-guideline/" target="_blank" rel="noopener">OWASP DevSecOps Guideline</a>,
+    <a href="https://dora.dev/" target="_blank" rel="noopener">DORA</a>.
+  </div>
+</section>
+
+<!-- ==================== 1 ==================== -->
+<section id="principles">
+  <h3><span class="n">01</span> Принципы безопасного проектирования</h3>
+  <p>Инструменты меняются, принципы нет. Сеньор отличается тем, что выбирает контроль исходя
+  из этих принципов, а не потому, что так делают все. Ниже базовый набор, на который опираются
+  и NIST, и OWASP, и рекомендации CISA по Secure by Design.</p>
+
+  <table>
+    <tr><th>Принцип</th><th>Что значит на практике</th></tr>
+    <tr><td><b>Наименьшие привилегии</b></td><td>Каждый процесс, токен и человек имеют ровно те права, что нужны для задачи, и не больше. Права выдаются точечно и на время.</td></tr>
+    <tr><td><b>Эшелонированная защита</b></td><td>Несколько независимых слоёв, чтобы пробитие одного не открывало всё. Сеть, приложение, данные, рантайм защищены по отдельности.</td></tr>
+    <tr><td><b>Нулевое доверие</b></td><td>Ни один запрос не считается доверенным по факту нахождения внутри периметра. Проверяется личность, устройство и права на каждый доступ.</td></tr>
+    <tr><td><b>Безопасно по умолчанию</b></td><td>Безопасная конфигурация идёт из коробки, небезопасное надо включать осознанно, а не наоборот.</td></tr>
+    <tr><td><b>Отказ в безопасную сторону</b></td><td>При сбое система закрывает доступ, а не открывает. Ошибка проверки прав означает отказ, а не пропуск.</td></tr>
+    <tr><td><b>Минимум поверхности атаки</b></td><td>Меньше открытых портов, эндпоинтов, зависимостей и прав, меньше того, что можно атаковать.</td></tr>
+    <tr><td><b>Разделение обязанностей</b></td><td>Тот, кто пишет код, не должен в одиночку катить его в прод без ревью и без независимого гейта.</td></tr>
+  </table>
+
+  <div class="box rule"><span class="lab">Правило</span>
+  <p>Новую фичу начинайте с вопроса, что здесь может пойти не так и кто выигрывает от поломки.
+  Это дешевле любого сканера и задаёт, какие контроли вообще нужны.</p></div>
+
+  <div class="box anti"><span class="lab">Антипаттерн</span>
+  <p>Безопасность как поздний слой поверх готовой архитектуры. Если модель доступа не заложена
+  в дизайн, её потом не прикрутить сканером, и каждая проверка будет ловить следствие, а не причину.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://www.cisa.gov/resources-tools/resources/secure-by-design" target="_blank" rel="noopener">CISA Secure by Design</a>,
+    <a href="https://csrc.nist.gov/pubs/sp/800/53/r5/final" target="_blank" rel="noopener">NIST SP 800-53 r5</a>.
+  </div>
+</section>
+
+<!-- ==================== 2 ==================== -->
+<section id="threat">
+  <h3><span class="n">02</span> Моделирование угроз по STRIDE</h3>
+  <p>Моделирование угроз это структурный разбор, где в системе слабые места, до того как их
+  найдёт злоумышленник. Делается на этапе проектирования и повторяется при крупных изменениях.
+  Отвечает на четыре вопроса, что строим, что может пойти не так, что с этим делаем, достаточно
+  ли хорошо мы это сделали.</p>
+
+  <p>STRIDE это модель Microsoft, шесть категорий угроз. Она удобна тем, что привязывает угрозу
+  к элементу схемы потоков данных, процессу, хранилищу, внешней сущности или потоку.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 300" role="img" aria-label="STRIDE и диаграмма потоков данных">
+      <!-- DFD -->
+      <text class="d-t" x="14" y="24" font-weight="700" font-size="15">Диаграмма потоков данных, к чему применяется STRIDE</text>
+      <g class="d-ac"><rect x="20" y="120" width="120" height="48" rx="8"/></g>
+      <text class="d-t" x="80" y="140" text-anchor="middle">Пользователь</text>
+      <text class="d-s" x="80" y="156" text-anchor="middle">внешняя сущность</text>
+
+      <g class="d-box"><rect x="220" y="116" width="130" height="56" rx="28"/></g>
+      <text class="d-t" x="285" y="140" text-anchor="middle">API сервис</text>
+      <text class="d-s" x="285" y="156" text-anchor="middle">процесс</text>
+
+      <g class="d-box"><rect x="430" y="120" width="130" height="48" rx="8"/></g>
+      <line class="d-l" x1="430" y1="132" x2="560" y2="132"/>
+      <text class="d-t" x="495" y="150" text-anchor="middle">База данных</text>
+      <text class="d-s" x="495" y="163" text-anchor="middle">хранилище</text>
+
+      <g class="d-la">
+        <line x1="140" y1="144" x2="220" y2="144"/>
+        <line x1="350" y1="144" x2="430" y2="144"/>
+      </g>
+      <text class="d-s" x="180" y="136" text-anchor="middle">запрос</text>
+      <text class="d-s" x="390" y="136" text-anchor="middle">чтение, запись</text>
+      <line class="d-l" x1="200" y1="96" x2="200" y2="196" stroke-dasharray="4 4"/>
+      <text class="d-s" x="200" y="212" text-anchor="middle">граница доверия</text>
+
+      <!-- STRIDE legend -->
+      <g transform="translate(600,96)">
+        <text class="d-t" x="0" y="0" font-weight="700">STRIDE</text>
+        <text class="d-t" x="0" y="24"><tspan class="d-m" fill="#4aa8ff">S</tspan>  Подмена личности</text>
+        <text class="d-t" x="0" y="46"><tspan class="d-m" fill="#4aa8ff">T</tspan>  Искажение данных</text>
+        <text class="d-t" x="0" y="68"><tspan class="d-m" fill="#4aa8ff">R</tspan>  Отказ от действий</text>
+        <text class="d-t" x="0" y="90"><tspan class="d-m" fill="#4aa8ff">I</tspan>  Утечка информации</text>
+        <text class="d-t" x="0" y="112"><tspan class="d-m" fill="#4aa8ff">D</tspan>  Отказ в обслуживании</text>
+        <text class="d-t" x="0" y="134"><tspan class="d-m" fill="#4aa8ff">E</tspan>  Повышение привилегий</text>
+      </g>
+    </svg>
+    <div class="cap">Схема 2. STRIDE привязывает шесть категорий угроз к элементам потока данных.</div>
+  </div>
+
+  <table>
+    <tr><th>Буква</th><th>Угроза</th><th>Нарушает</th><th>Контроль</th></tr>
+    <tr><td>S</td><td>Spoofing, выдать себя за другого</td><td>Подлинность</td><td>Аутентификация, MFA, взаимный TLS</td></tr>
+    <tr><td>T</td><td>Tampering, подмена данных</td><td>Целостность</td><td>Подписи, хеши, контроль доступа на запись</td></tr>
+    <tr><td>R</td><td>Repudiation, отрицание действия</td><td>Неотказуемость</td><td>Неизменяемые журналы аудита</td></tr>
+    <tr><td>I</td><td>Information disclosure, утечка</td><td>Конфиденциальность</td><td>Шифрование, минимизация данных, права</td></tr>
+    <tr><td>D</td><td>Denial of service, отказ</td><td>Доступность</td><td>Лимиты, квоты, автоскейл, изоляция</td></tr>
+    <tr><td>E</td><td>Elevation of privilege, эскалация</td><td>Авторизацию</td><td>Наименьшие привилегии, проверка на сервере</td></tr>
+  </table>
+
+  <div class="box check"><span class="lab">Проверка</span>
+  <p>Модель угроз считается сделанной, когда по каждому потоку через границу доверия есть ответ,
+  какие из шести категорий актуальны и какой контроль их закрывает. Нерешённое уходит в бэклог
+  с приоритетом, а не забывается.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://owasp.org/www-community/Threat_Modeling" target="_blank" rel="noopener">OWASP Threat Modeling</a>,
+    <a href="https://owasp.org/www-community/Threat_Modeling_Process" target="_blank" rel="noopener">OWASP Threat Modeling Process</a>,
+    <a href="https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats" target="_blank" rel="noopener">Microsoft STRIDE</a>.
+  </div>
+</section>
+
+<!-- ==================== 3 ==================== -->
+<section id="ssdlc">
+  <h3><span class="n">03</span> Жизненный цикл безопасной разработки (SSDLC)</h3>
+  <p>NIST SSDF, документ SP 800-218, это отраслевой каркас безопасной разработки. Он не про
+  конкретные инструменты, а про практики, сгруппированные в четыре семейства. Сеньору полезно
+  держать их в голове как карту, любой контроль ложится в одну из этих групп.</p>
+
+  <table>
+    <tr><th>Группа</th><th>О чём</th><th>Примеры практик</th></tr>
+    <tr><td><b>PO</b> Prepare the Organization</td><td>Подготовить процессы, роли и инструменты</td><td>Требования безопасности, обучение, цепочка инструментов</td></tr>
+    <tr><td><b>PS</b> Protect the Software</td><td>Защитить сам код и артефакты от подмены</td><td>Контроль доступа к репозиториям, подпись релизов, хранение артефактов</td></tr>
+    <tr><td><b>PW</b> Produce Well-Secured Software</td><td>Проектировать и писать безопасно</td><td>Модель угроз, безопасный дизайн, ревью, тестирование</td></tr>
+    <tr><td><b>RV</b> Respond to Vulnerabilities</td><td>Находить и закрывать уязвимости после релиза</td><td>Приём сообщений, анализ, выпуск исправлений</td></tr>
+  </table>
+
+  <p>Дальше в гайде разделы 4 и 5 это в основном PW и PS, раздел 7 про CI/CD это PS,
+  разделы 12 и 13 это RV, а governance в разделе 14 это PO. Так стандарт превращается
+  в конкретные действия.</p>
+
+  <div class="box rule"><span class="lab">Правило</span>
+  <p>Контроль без ответственного и без автоматической проверки это пожелание, а не контроль.
+  У каждой практики должен быть владелец и место в пайплайне, где её невыполнение видно.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://csrc.nist.gov/pubs/sp/800/218/final" target="_blank" rel="noopener">NIST SP 800-218 SSDF v1.1</a>,
+    <a href="https://owasp.org/www-project-samm/" target="_blank" rel="noopener">OWASP SAMM</a>.
+  </div>
+</section>
+
+<!-- ==================== 4 ==================== -->
+<section id="code">
+  <h3><span class="n">04</span> Код и репозиторий</h3>
+  <p>Первый рубеж это то, что попадает в репозиторий. Дешевле всего остановить проблему здесь,
+  в IDE и пул-реквесте. Три опоры, безопасное написание, защита ветки и автоматические проверки
+  на входе.</p>
+
+  <h4>Пре-коммит хуки, ловим до коммита</h4>
+  <p>Хуки гоняют быстрые проверки локально, до того как код уедет. Главное здесь, поиск секретов,
+  потому что попавший в историю токен уже утёк.</p>
+  <figure class="code"><figcaption><span>.pre-commit-config.yaml</span><button class="copy">копировать</button></figcaption>
+<pre><code>repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks            # блокирует коммит с секретом
+  - repo: local
+    hooks:
+      - id: semgrep
+        name: semgrep-sast
+        entry: semgrep --config auto --error --quiet
+        language: system
+        types: [python, javascript, go]</code></pre></figure>
+
+  <h4>SAST, статический анализ кода</h4>
+  <p>SAST ищет уязвимые паттерны в исходном коде без запуска, инъекции, небезопасную
+  десериализацию, слабую криптографию. В пайплайне запускается на каждый пул-реквест.</p>
+  <figure class="code"><figcaption><span>bash</span><button class="copy">копировать</button></figcaption>
+<pre><code>semgrep ci                          # правила под язык проекта, ненулевой код при находке
+semgrep --config auto --sarif -o semgrep.sarif .   # выгрузка в code scanning</code></pre></figure>
+
+  <h4>Защита ветки и ревью</h4>
+  <p>Ветка <code class="inl">main</code> защищена, прямой пуш запрещён, изменения идут через
+  пул-реквест с обязательным ревью и зелёными проверками. Файл CODEOWNERS автоматически зовёт
+  нужных ревьюеров на чувствительные пути.</p>
+  <figure class="code"><figcaption><span>CODEOWNERS</span><button class="copy">копировать</button></figcaption>
+<pre><code>/infra/        @org/platform-security
+/auth/         @org/appsec
+/.github/      @org/platform-security   # изменения пайплайна ревьюит безопасность</code></pre></figure>
+
+  <div class="box why"><span class="lab">Почему ревьюят пайплайн отдельно</span>
+  <p>Пайплайн имеет доступ к секретам и к проду. Правка в <code class="inl">.github/</code>
+  опаснее правки в обычном коде, поэтому такие изменения требуют отдельного, более доверенного
+  ревьюера. Это прямое следствие рисков CI/CD из раздела 7.</p></div>
+
+  <div class="box anti"><span class="lab">Антипаттерн</span>
+  <p>Секрет в коде с комментарием, что потом уберём. Уберёте из файла, но он останется в истории
+  git. Правильно, секрет не коммитить вовсе, а найденный считать скомпрометированным и ротировать.</p></div>
+
+  <div class="box check"><span class="lab">Проверка</span>
+  <p>Попробуйте закоммитить тестовую строку вида ключа. Хук должен остановить коммит. Если
+  проходит, хук не установлен или обойдён флагом, это дефект процесса.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://github.com/gitleaks/gitleaks" target="_blank" rel="noopener">Gitleaks</a>,
+    <a href="https://semgrep.dev/docs/" target="_blank" rel="noopener">Semgrep Docs</a>,
+    <a href="https://owasp.org/www-project-web-security-testing-guide/" target="_blank" rel="noopener">OWASP WSTG</a>.
+  </div>
+</section>
+
+<!-- ==================== 5 ==================== -->
+<section id="supply">
+  <h3><span class="n">05</span> Цепочка поставок и SLSA</h3>
+  <p>Большая часть вашего продукта это чужой код, зависимости и базовые образы. Атака на цепочку
+  поставок бьёт не по вам напрямую, а по тому, что вы тянете к себе, скомпрометированная
+  библиотека, подменённый артефакт, троянский базовый образ. Защита строится на трёх вещах,
+  видимость состава, проверка происхождения, подпись артефактов.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 250" role="img" aria-label="Цепочка поставок и SLSA">
+      <g class="d-box">
+        <rect x="20" y="80" width="120" height="50" rx="8"/>
+        <rect x="200" y="80" width="120" height="50" rx="8"/>
+        <rect x="380" y="80" width="120" height="50" rx="8"/>
+        <rect x="560" y="80" width="120" height="50" rx="8"/>
+      </g>
+      <g class="d-gd"><rect x="740" y="80" width="140" height="50" rx="8"/></g>
+      <g class="d-t" text-anchor="middle" font-weight="600">
+        <text x="80" y="102">Исходники</text>
+        <text x="260" y="102">Зависимости</text>
+        <text x="440" y="102">Сборка</text>
+        <text x="620" y="102">Артефакт</text>
+        <text x="810" y="102">Деплой</text>
+      </g>
+      <g class="d-s" text-anchor="middle">
+        <text x="80" y="120">git, ревью</text>
+        <text x="260" y="120">SCA, pin</text>
+        <text x="440" y="120">изолированно</text>
+        <text x="620" y="120">SBOM+подпись</text>
+        <text x="810" y="120">verify подписи</text>
+      </g>
+      <g class="d-la">
+        <line x1="140" y1="105" x2="200" y2="105"/><line x1="320" y1="105" x2="380" y2="105"/>
+        <line x1="500" y1="105" x2="560" y2="105"/><line x1="680" y1="105" x2="740" y2="105"/>
+      </g>
+      <text class="d-t" x="20" y="46" font-weight="700" font-size="15">Провенанс сопровождает артефакт по всей цепочке</text>
+      <path class="d-la" stroke-dasharray="5 4" d="M440 130 C 440 190, 620 190, 620 130"/>
+      <text class="d-s" x="530" y="205" text-anchor="middle">провенанс, кто, из чего и как собрал</text>
+      <g class="d-bd"><rect x="250" y="150" width="120" height="34" rx="6"/></g>
+      <text class="d-s" x="310" y="171" text-anchor="middle" fill="#ff6b6b">точка атаки</text>
+    </svg>
+    <div class="cap">Схема 3. SLSA добавляет к артефакту проверяемый провенанс и подпись на каждом шаге.</div>
+  </div>
+
+  <p>SLSA это отраслевой каркас уровней зрелости цепочки поставок. Чем выше уровень, тем сильнее
+  гарантии происхождения артефакта.</p>
+  <table>
+    <tr><th>Уровень</th><th>Что гарантирует</th></tr>
+    <tr><td>L1</td><td>Есть провенанс, известно как собирали</td></tr>
+    <tr><td>L2</td><td>Провенанс подписан, сборка на управляемой платформе</td></tr>
+    <tr><td>L3</td><td>Изолированная сборка, провенанс защищён от подделки</td></tr>
+  </table>
+
+  <h4>SBOM, опись состава</h4>
+  <p>SBOM это список всех компонентов сборки. Без него при новой уязвимости вы не ответите
+  на вопрос, есть ли у нас эта библиотека и где.</p>
+  <figure class="code"><figcaption><span>bash</span><button class="copy">копировать</button></figcaption>
+<pre><code>syft dir:. -o cyclonedx-json > sbom.json     # состав в формате CycloneDX
+trivy sbom sbom.json                          # проверка готового SBOM на уязвимости
+grype sbom:sbom.json                          # второй сканер для сверки находок</code></pre></figure>
+
+  <h4>Подпись и проверка происхождения</h4>
+  <p>Подпись доказывает, что артефакт собран в вашем пайплайне и не подменён по дороге. Cosign
+  умеет подпись без хранения ключей, через OIDC, привязку SBOM как аттестации и проверку перед
+  деплоем.</p>
+  <figure class="code"><figcaption><span>bash</span><button class="copy">копировать</button></figcaption>
+<pre><code># подпись по digest, без долгоживущих ключей (keyless, через OIDC)
+cosign sign --yes registry.example.com/app@sha256:DIGEST
+
+# привязать SBOM к образу как аттестацию
+cosign attest --yes --predicate sbom.json --type cyclonedx \
+  registry.example.com/app@sha256:DIGEST
+
+# проверка при деплое: только образы, собранные нашим пайплайном
+cosign verify \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp '^https://github.com/org/.+' \
+  registry.example.com/app@sha256:DIGEST</code></pre></figure>
+
+  <div class="box rule"><span class="lab">Правило</span>
+  <p>Ссылайтесь на образ по digest <code class="inl">@sha256:...</code>, а не по тегу.
+  Тег можно перезаписать и подсунуть другой образ, digest это неизменяемый адрес содержимого.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://slsa.dev/spec/v1.0/levels" target="_blank" rel="noopener">SLSA Levels v1.0</a>,
+    <a href="https://docs.sigstore.dev/" target="_blank" rel="noopener">Sigstore, cosign</a>,
+    <a href="https://github.com/anchore/syft" target="_blank" rel="noopener">Syft</a>,
+    <a href="https://trivy.dev/" target="_blank" rel="noopener">Trivy</a>.
+  </div>
+</section>
+
+<!-- ==================== 6 ==================== -->
+<section id="build">
+  <h3><span class="n">06</span> Сборка и образы контейнеров</h3>
+  <p>Цель этапа сборки, получить минимальный, воспроизводимый и проверенный артефакт. Чем меньше
+  в образе лишнего, тем меньше поверхность атаки и тем меньше уязвимостей приносят системные пакеты.</p>
+
+  <figure class="code"><figcaption><span>Dockerfile, многоступенчатая сборка на distroless</span><button class="copy">копировать</button></figcaption>
+<pre><code># ступень сборки
+FROM golang:1.22 AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 go build -o /app ./cmd/api
+
+# рантайм: без shell и пакетного менеджера, запуск не от root
+FROM gcr.io/distroless/static:nonroot
+COPY --from=build /app /app
+USER nonroot:nonroot
+ENTRYPOINT ["/app"]</code></pre></figure>
+
+  <p>Что здесь важно. Многоступенчатость оставляет в финальном образе только бинарь, без
+  компилятора и исходников. Distroless это образ без оболочки и пакетного менеджера, атакующему
+  не на что опереться внутри. Запуск от <code class="inl">nonroot</code> снижает последствия
+  пробития. Собранный образ обязательно сканируется до публикации.</p>
+
+  <figure class="code"><figcaption><span>bash</span><button class="copy">копировать</button></figcaption>
+<pre><code>trivy image --severity HIGH,CRITICAL --exit-code 1 \
+  registry.example.com/app@sha256:DIGEST     # валит сборку на высоких уязвимостях</code></pre></figure>
+
+  <div class="box anti"><span class="lab">Антипаттерн</span>
+  <p>Базовый образ <code class="inl">latest</code> и установка пакетов без фиксации версий.
+  Сборка перестаёт быть воспроизводимой, сегодня и завтра из одного Dockerfile выходят разные
+  образы, и вы не знаете, что именно уехало в прод.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://csrc.nist.gov/pubs/sp/800/190/final" target="_blank" rel="noopener">NIST SP 800-190 Container Security</a>,
+    <a href="https://trivy.dev/" target="_blank" rel="noopener">Trivy</a>.
+  </div>
+</section>
+
+<!-- ==================== 7 ==================== -->
+<section id="cicd">
+  <h3><span class="n">07</span> Пайплайн CI/CD как объект атаки</h3>
+  <p>Пайплайн имеет доступ к коду, секретам и проду, поэтому сам является лакомой целью. OWASP
+  выделяет десять рисков CI/CD, от небезопасной аутентификации потоков до отравления сборки.
+  Три главных вывода для сеньора ниже.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 250" role="img" aria-label="Контроли безопасности в пайплайне">
+      <text class="d-t" x="14" y="24" font-weight="700" font-size="15">Где какой контроль в CI/CD</text>
+      <!-- lane PR -->
+      <g class="d-ac"><rect x="20" y="50" width="250" height="70" rx="8"/></g>
+      <text class="d-t" x="145" y="74" text-anchor="middle" font-weight="600">Пул-реквест, быстро</text>
+      <text class="d-s" x="145" y="94" text-anchor="middle">SAST, поиск секретов, SCA,</text>
+      <text class="d-s" x="145" y="108" text-anchor="middle">линт IaC, обратная связь за минуты</text>
+      <!-- lane build -->
+      <g class="d-wn"><rect x="325" y="50" width="250" height="70" rx="8"/></g>
+      <text class="d-t" x="450" y="74" text-anchor="middle" font-weight="600">Сборка и стенд</text>
+      <text class="d-s" x="450" y="94" text-anchor="middle">image scan, SBOM, подпись,</text>
+      <text class="d-s" x="450" y="108" text-anchor="middle">DAST по staging</text>
+      <!-- lane deploy -->
+      <g class="d-gd"><rect x="630" y="50" width="250" height="70" rx="8"/></g>
+      <text class="d-t" x="755" y="74" text-anchor="middle" font-weight="600">Деплой и прод</text>
+      <text class="d-s" x="755" y="94" text-anchor="middle">verify подписи, admission,</text>
+      <text class="d-s" x="755" y="108" text-anchor="middle">runtime-защита, детект</text>
+      <g class="d-la"><line x1="270" y1="85" x2="325" y2="85"/><line x1="575" y1="85" x2="630" y2="85"/></g>
+      <!-- principles -->
+      <g class="d-box"><rect x="20" y="160" width="860" height="70" rx="8"/></g>
+      <text class="d-t" x="40" y="185" font-weight="600">Через весь пайплайн</text>
+      <text class="d-s" x="40" y="206">минимальные права раннера, доступ к облаку по OIDC вместо долгоживущих ключей,</text>
+      <text class="d-s" x="40" y="221">внешние экшены закреплены по SHA, защита окружения prod ручным подтверждением</text>
+    </svg>
+    <div class="cap">Схема 4. Быстрые проверки в пул-реквесте, тяжёлые на сборке, гейты на деплое.</div>
+  </div>
+
+  <h4>1. Минимальные права по умолчанию</h4>
+  <p>Токен пайплайна по умолчанию должен уметь только читать. Права на запись выдаются точечно
+  тому шагу, которому они реально нужны.</p>
+
+  <h4>2. Доступ к облаку через OIDC, а не через хранимые ключи</h4>
+  <p>Долгоживущий ключ в секретах пайплайна это постоянный риск утечки. OIDC выдаёт короткоживущий
+  токен на время запуска, красть нечего.</p>
+
+  <figure class="code"><figcaption><span>.github/workflows/security.yml</span><button class="copy">копировать</button></figcaption>
+<pre><code>name: ci-security
+on: [pull_request]
+
+permissions:
+  contents: read            # минимум по умолчанию для всего workflow
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # только этому job, для выгрузки SARIF
+      id-token: write        # для OIDC к облаку
+    steps:
+      - uses: actions/checkout@v4        # в проде закрепить по @&lt;sha&gt;
+      - name: SAST
+        run: semgrep ci
+      - name: Секреты
+        uses: gitleaks/gitleaks-action@v2
+      - name: Зависимости, IaC, секреты
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scanners: vuln,misconfig,secret
+          format: sarif
+          output: trivy.sarif
+      - name: Публикация результатов
+        uses: github/codeql-action/upload-sarif@v3
+        with: { sarif_file: trivy.sarif }</code></pre></figure>
+
+  <h4>3. Внешние экшены закреплены по SHA</h4>
+  <p>Тег вроде <code class="inl">@v4</code> подвижен, автор или атакующий может перезаписать его
+  на вредоносный код. Закрепление по полному SHA-коммиту делает зависимость неизменной.</p>
+
+  <div class="box check"><span class="lab">Проверка</span>
+  <p>Откройте любой workflow и найдите строку <code class="inl">permissions:</code>. Если её нет,
+  токен получает права по умолчанию, часто с записью, это находка. Внешние экшены на подвижных
+  тегах в чувствительных потоках, тоже находка.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://github.com/OWASP/www-project-top-10-ci-cd-security-risks" target="_blank" rel="noopener">OWASP Top 10 CI/CD Security Risks</a>,
+    <a href="https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions" target="_blank" rel="noopener">GitHub Actions Security Hardening</a>.
+  </div>
+</section>
+
+<!-- ==================== 8 ==================== -->
+<section id="iac">
+  <h3><span class="n">08</span> Инфраструктура как код</h3>
+  <p>Если инфраструктура описана кодом, её ошибки тоже ловятся кодом, до применения. Открытый
+  наружу порт, бакет без шифрования, слишком широкая роль, всё это видно в Terraform до
+  <code class="inl">apply</code>.</p>
+
+  <figure class="code"><figcaption><span>bash</span><button class="copy">копировать</button></figcaption>
+<pre><code>trivy config .        # мисконфиги в Terraform, Kubernetes, Dockerfile
+checkov -d .          # второй сканер IaC, свой набор правил
+conftest test plan.json   # свои правила на языке Rego (OPA)</code></pre></figure>
+
+  <p>Свои правила через policy as code позволяют запрещать именно то, что важно вашей организации,
+  а не только общие мисконфиги из коробки.</p>
+  <figure class="code"><figcaption><span>policy/s3.rego, запрет бакета без шифрования</span><button class="copy">копировать</button></figcaption>
+<pre><code>package main
+
+deny[msg] {
+  bucket := input.resource.aws_s3_bucket[name]
+  not bucket.server_side_encryption_configuration
+  msg := sprintf("Бакет %s без шифрования на стороне сервера", [name])
+}</code></pre></figure>
+
+  <div class="box rule"><span class="lab">Правило</span>
+  <p>Проверка IaC стоит в пул-реквесте и валит сборку на критичных правилах. Инфраструктура,
+  которую нельзя применить в обход пайплайна, это и есть управляемая инфраструктура.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://www.openpolicyagent.org/docs/latest/" target="_blank" rel="noopener">Open Policy Agent</a>,
+    <a href="https://trivy.dev/" target="_blank" rel="noopener">Trivy config</a>.
+  </div>
+</section>
+
+<!-- ==================== 9 ==================== -->
+<section id="k8s">
+  <h3><span class="n">09</span> Контейнеры и Kubernetes</h3>
+  <p>Безопасность Kubernetes удобно раскладывать на четыре слоя, известные как 4C, облако,
+  кластер, контейнер, код. Пробитие внешнего слоя не должно открывать внутренний.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 620 300" role="img" aria-label="Модель 4C безопасности Kubernetes">
+      <g>
+        <rect class="d-box" x="30" y="20" width="560" height="260" rx="14"/>
+        <rect class="d-ac" x="90" y="60" width="440" height="200" rx="12"/>
+        <rect class="d-wn" x="160" y="100" width="300" height="140" rx="10"/>
+        <rect class="d-gd" x="235" y="140" width="150" height="70" rx="8"/>
+      </g>
+      <g class="d-t" font-weight="600">
+        <text x="44" y="42">Cloud, облако и сеть</text>
+        <text x="104" y="82">Cluster, RBAC, политики, admission</text>
+        <text x="174" y="122">Container, образ и securityContext</text>
+        <text x="310" y="178" text-anchor="middle">Code</text>
+        <text x="310" y="196" text-anchor="middle" class="d-s">ваш код</text>
+      </g>
+    </svg>
+    <div class="cap">Схема 5. Модель 4C, каждый слой защищается отдельно.</div>
+  </div>
+
+  <h4>securityContext, минимальные права контейнера</h4>
+  <figure class="code"><figcaption><span>deployment.yaml, фрагмент</span><button class="copy">копировать</button></figcaption>
+<pre><code>spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile: { type: RuntimeDefault }
+      automountServiceAccountToken: false   # не монтировать токен API без нужды
+      containers:
+        - name: app
+          image: registry.example.com/app@sha256:DIGEST   # по digest
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            limits: { cpu: "500m", memory: "256Mi" }</code></pre></figure>
+
+  <h4>Pod Security Admission на уровне namespace</h4>
+  <figure class="code"><figcaption><span>namespace.yaml</span><button class="copy">копировать</button></figcaption>
+<pre><code>apiVersion: v1
+kind: Namespace
+metadata:
+  name: payments
+  labels:
+    pod-security.kubernetes.io/enforce: restricted   # запрет привилегированных подов
+    pod-security.kubernetes.io/warn: restricted</code></pre></figure>
+
+  <h4>Сеть по умолчанию закрыта</h4>
+  <figure class="code"><figcaption><span>networkpolicy.yaml, default-deny</span><button class="copy">копировать</button></figcaption>
+<pre><code>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: default-deny, namespace: payments }
+spec:
+  podSelector: {}                 # все поды namespace
+  policyTypes: ["Ingress", "Egress"]   # ничего не разрешено, дальше открываем точечно</code></pre></figure>
+
+  <h4>Admission-контроль, гейт на входе в кластер</h4>
+  <p>Kyverno или Gatekeeper не пускают в кластер объекты, нарушающие политику, например под от
+  root или неподписанный образ. Это тот же policy as code, но на этапе деплоя.</p>
+  <figure class="code"><figcaption><span>kyverno-require-nonroot.yaml</span><button class="copy">копировать</button></figcaption>
+<pre><code>apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata: { name: require-non-root }
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: check-runasnonroot
+      match: { any: [{ resources: { kinds: ["Pod"] } }] }
+      validate:
+        message: "Контейнеры должны запускаться не от root."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  runAsNonRoot: true</code></pre></figure>
+
+  <h4>RBAC по наименьшим привилегиям</h4>
+  <figure class="code"><figcaption><span>role.yaml</span><button class="copy">копировать</button></figcaption>
+<pre><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { namespace: payments, name: app-reader }
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]     # без create, delete и без wildcard "*"</code></pre></figure>
+
+  <div class="box check"><span class="lab">Проверка</span>
+  <p>Попробуйте развернуть под от root в namespace с меткой <code class="inl">enforce: restricted</code>.
+  Кластер должен отказать. Если под создаётся, политика не применена, это дефект конфигурации.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://kubernetes.io/docs/concepts/security/pod-security-standards/" target="_blank" rel="noopener">Pod Security Standards</a>,
+    <a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/" target="_blank" rel="noopener">Network Policies</a>,
+    <a href="https://kyverno.io/" target="_blank" rel="noopener">Kyverno</a>,
+    <a href="https://www.cisecurity.org/benchmark/kubernetes" target="_blank" rel="noopener">CIS Kubernetes Benchmark</a>.
+  </div>
+</section>
+
+<!-- ==================== 10 ==================== -->
+<section id="secrets">
+  <h3><span class="n">10</span> Секреты</h3>
+  <p>Секрет это то, чем система доказывает свои права, пароль, токен, ключ. Правило одно,
+  секретов нет в коде, в образах и в манифестах. Они лежат в защищённом хранилище и выдаются
+  во время работы.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 880 210" role="img" aria-label="Поток секретов без хранения в коде">
+      <g class="d-bd"><rect x="20" y="80" width="150" height="50" rx="8"/></g>
+      <text class="d-t" x="95" y="100" text-anchor="middle">Код и git</text>
+      <text class="d-s" x="95" y="118" text-anchor="middle" fill="#ff6b6b">секретов нет</text>
+
+      <g class="d-gd"><rect x="360" y="30" width="170" height="50" rx="8"/></g>
+      <text class="d-t" x="445" y="50" text-anchor="middle">Хранилище</text>
+      <text class="d-s" x="445" y="68" text-anchor="middle">Vault, облачный KMS</text>
+
+      <g class="d-ac"><rect x="360" y="130" width="170" height="50" rx="8"/></g>
+      <text class="d-t" x="445" y="150" text-anchor="middle">OIDC провайдер</text>
+      <text class="d-s" x="445" y="168" text-anchor="middle">короткоживущий токен</text>
+
+      <g class="d-box"><rect x="700" y="80" width="160" height="50" rx="8"/></g>
+      <text class="d-t" x="780" y="100" text-anchor="middle">Приложение</text>
+      <text class="d-s" x="780" y="118" text-anchor="middle">в рантайме</text>
+
+      <g class="d-la">
+        <line x1="530" y1="55" x2="700" y2="95"/>
+        <line x1="530" y1="155" x2="700" y2="115"/>
+      </g>
+      <text class="d-s" x="200" y="70">пайплайн и приложение</text>
+      <text class="d-s" x="200" y="150">берут секрет по личности,</text>
+      <text class="d-s" x="200" y="167">а не из файла</text>
+    </svg>
+    <div class="cap">Схема 6. Секрет выдаётся в рантайме по проверенной личности, не хранится в коде.</div>
+  </div>
+
+  <p>В Kubernetes оператор External Secrets подтягивает значения из внешнего хранилища и создаёт
+  обычный секрет в кластере, при этом в git уходит только ссылка, а не само значение.</p>
+  <figure class="code"><figcaption><span>externalsecret.yaml</span><button class="copy">копировать</button></figcaption>
+<pre><code>apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata: { name: db-creds, namespace: payments }
+spec:
+  refreshInterval: 1h
+  secretStoreRef: { name: vault, kind: ClusterSecretStore }
+  target: { name: db-creds }
+  data:
+    - secretKey: password
+      remoteRef: { key: prod/db, property: password }   # значение остаётся в Vault</code></pre></figure>
+
+  <div class="box anti"><span class="lab">Антипаттерн</span>
+  <p>Долгоживущий облачный ключ в переменных пайплайна на годы. Он не ротируется, живёт в логах
+  и бэкапах и однажды утекает. Замена, доступ по OIDC на время запуска и динамические секреты
+  с коротким сроком.</p></div>
+
+  <p><b>Если секрет всё же утёк.</b> Порядок такой. Сначала отозвать и заменить сам секрет,
+  потому что он уже скомпрометирован. Только потом чистить историю git через
+  <code class="inl">git filter-repo</code>. Чистка без ротации бессмысленна, копия истории есть
+  у всех, кто клонировал репозиторий.</p>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://external-secrets.io/latest/" target="_blank" rel="noopener">External Secrets Operator</a>,
+    <a href="https://12factor.net/config" target="_blank" rel="noopener">12-Factor, Config</a>.
+  </div>
+</section>
+
+<!-- ==================== 11 ==================== -->
+<section id="testing">
+  <h3><span class="n">11</span> Тестирование безопасности</h3>
+  <p>У каждого вида проверки своя область видимости и своё место в пайплайне. Сеньор не путает их
+  и не ждёт от одного инструмента того, что умеет другой.</p>
+  <table>
+    <tr><th>Вид</th><th>Что проверяет</th><th>Где в пайплайне</th></tr>
+    <tr><td><b>SAST</b></td><td>Уязвимые паттерны в исходном коде, без запуска</td><td>Пул-реквест</td></tr>
+    <tr><td><b>SCA</b></td><td>Известные уязвимости в зависимостях</td><td>Пул-реквест</td></tr>
+    <tr><td><b>Поиск секретов</b></td><td>Токены и ключи в коде и истории</td><td>Пре-коммит и пул-реквест</td></tr>
+    <tr><td><b>DAST</b></td><td>Уязвимости в работающем приложении, снаружи</td><td>Стенд staging</td></tr>
+    <tr><td><b>IAST</b></td><td>Анализ изнутри во время работы тестов</td><td>Тестовое окружение</td></tr>
+    <tr><td><b>Fuzzing</b></td><td>Реакция на неожиданный и битый ввод</td><td>Ночные прогоны</td></tr>
+  </table>
+
+  <figure class="code"><figcaption><span>bash, DAST по стенду</span><button class="copy">копировать</button></figcaption>
+<pre><code>docker run -t ghcr.io/zaproxy/zaproxy \
+  zap-baseline.py -t https://staging.example.com   # пассивный скан работающего стенда</code></pre></figure>
+
+  <div class="box rule"><span class="lab">Правило</span>
+  <p>Решите заранее, что валит сборку, а что только предупреждает. Разумная граница, новые
+  уязвимости уровня High и Critical блокируют, старые и низкие идут в бэклог. Иначе либо шум
+  игнорируют, либо сборка стоит вечно.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://owasp.org/www-project-devsecops-guideline/" target="_blank" rel="noopener">OWASP DevSecOps Guideline</a>,
+    <a href="https://owasp.org/www-project-web-security-testing-guide/" target="_blank" rel="noopener">OWASP WSTG</a>.
+  </div>
+</section>
+
+<!-- ==================== 12 ==================== -->
+<section id="runtime">
+  <h3><span class="n">12</span> Прод, мониторинг и реагирование</h3>
+  <p>Часть атак видна только в проде, потому что использует реальный трафик и реальные права.
+  Здесь работают рантайм-защита, наблюдаемость и заранее готовый план реагирования.</p>
+  <ul>
+    <li><strong>Рантайм-детект.</strong> Falco следит за поведением контейнеров и поднимает
+    тревогу на подозрительное, запуск оболочки в контейнере, запись в системные каталоги,
+    неожиданные сетевые соединения.</li>
+    <li><strong>Наблюдаемость.</strong> Централизованные журналы, метрики и трассировки,
+    по которым событие безопасности можно восстановить и расследовать.</li>
+    <li><strong>Реагирование по NIST.</strong> Подготовка, обнаружение и анализ, сдерживание
+    и устранение, восстановление, выводы. План отрепетирован, а не написан на бумаге.</li>
+  </ul>
+
+  <div class="box rule"><span class="lab">Правило, что нельзя писать в журналы</span>
+  <p>В журналы не попадают пароли, токены, номера карт и персональные данные в открытом виде.
+  Журнал часто менее защищён, чем база, и утечка через логи это отдельный класс инцидентов.</p></div>
+
+  <div class="box why"><span class="lab">Почему прод не заменяет ранние этапы</span>
+  <p>Найти проблему в проде дороже всего, идёт реальный ущерб. Рантайм-контроль это последний
+  рубеж и сеть безопасности, а не замена проверок в пул-реквесте и на сборке.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://falco.org/docs/" target="_blank" rel="noopener">Falco Docs</a>,
+    <a href="https://csrc.nist.gov/pubs/sp/800/61/r3/final" target="_blank" rel="noopener">NIST SP 800-61 Incident Response</a>.
+  </div>
+</section>
+
+<!-- ==================== 13 ==================== -->
+<section id="vulnmgmt">
+  <h3><span class="n">13</span> Управление уязвимостями</h3>
+  <p>Сканеры находят тысячи уязвимостей, чинить всё сразу невозможно. Зрелый процесс это не про
+  количество находок, а про правильный порядок исправления. Приоритет задаётся не одним баллом,
+  а тремя сигналами вместе.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 880 250" role="img" aria-label="Приоритизация уязвимостей">
+      <g class="d-bd"><rect x="30" y="40" width="200" height="46" rx="8"/></g>
+      <text class="d-t" x="130" y="63" text-anchor="middle">В списке KEV (CISA)?</text>
+      <text class="d-s" x="130" y="79" text-anchor="middle">эксплуатируется в реальности</text>
+
+      <g class="d-wn"><rect x="30" y="120" width="200" height="46" rx="8"/></g>
+      <text class="d-t" x="130" y="143" text-anchor="middle">Высокий EPSS?</text>
+      <text class="d-s" x="130" y="159" text-anchor="middle">вероятность эксплуатации</text>
+
+      <g class="d-box"><rect x="30" y="200" width="200" height="40" rx="8"/></g>
+      <text class="d-t" x="130" y="225" text-anchor="middle">CVSS, базовая тяжесть</text>
+
+      <g class="d-la">
+        <line x1="230" y1="63" x2="330" y2="63"/>
+        <line x1="230" y1="143" x2="330" y2="143"/>
+        <line x1="230" y1="220" x2="330" y2="220"/>
+      </g>
+      <g class="d-gd"><rect x="340" y="40" width="220" height="46" rx="8"/></g>
+      <text class="d-t" x="450" y="63" text-anchor="middle">Чинить срочно, SLA часы</text>
+      <g class="d-wn"><rect x="340" y="120" width="220" height="46" rx="8"/></g>
+      <text class="d-t" x="450" y="143" text-anchor="middle">План на ближайший спринт</text>
+      <g class="d-box"><rect x="340" y="200" width="220" height="40" rx="8"/></g>
+      <text class="d-t" x="450" y="225" text-anchor="middle">Бэклог по политике SLA</text>
+
+      <text class="d-s" x="620" y="60">KEV, факт эксплуатации,</text>
+      <text class="d-s" x="620" y="76">важнее любого балла</text>
+      <text class="d-s" x="620" y="140">EPSS, оценка вероятности,</text>
+      <text class="d-s" x="620" y="156">что уязвимость используют</text>
+      <text class="d-s" x="620" y="222">CVSS, тяжесть без контекста</text>
+    </svg>
+    <div class="cap">Схема 7. Приоритет по факту эксплуатации и вероятности, не по одному баллу CVSS.</div>
+  </div>
+
+  <p>CVSS отвечает, насколько тяжело в худшем случае, но не отвечает, атакуют ли это прямо сейчас.
+  Каталог KEV от CISA это перечень уязвимостей с подтверждённой эксплуатацией в реальном мире,
+  их чинят первыми. EPSS это оценка вероятности, что уязвимость будут эксплуатировать в ближайшее
+  время. Вместе они превращают гору находок в понятную очередь.</p>
+
+  <div class="box rule"><span class="lab">Правило</span>
+  <p>Задайте SLA на исправление по классам, например критичное с фактом эксплуатации за сутки,
+  высокое за неделю, среднее за месяц. Метрика зрелости, доля уязвимостей, закрытых в срок,
+  а не общее число находок.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://www.first.org/cvss/" target="_blank" rel="noopener">FIRST CVSS</a>,
+    <a href="https://www.first.org/epss/" target="_blank" rel="noopener">FIRST EPSS</a>,
+    <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener">CISA KEV</a>.
+  </div>
+</section>
+
+<!-- ==================== 14 ==================== -->
+<section id="governance">
+  <h3><span class="n">14</span> Governance, зрелость и метрики</h3>
+  <p>Отдельные контроли это ещё не программа. Governance это то, что связывает их в систему,
+  которую можно измерить и улучшать. Здесь помогают модели зрелости и метрики.</p>
+  <ul>
+    <li><strong>OWASP SAMM</strong> и <strong>NIST SSDF</strong> дают карту практик и позволяют
+    честно оценить, где вы сейчас и куда двигаться, без иллюзий, что уже всё хорошо.</li>
+    <li><strong>OWASP ASVS</strong> это набор требований к безопасности приложения по уровням,
+    его удобно использовать как чек-лист приёмки и как основу тест-кейсов.</li>
+    <li><strong>Security champions</strong> это разработчики в командах, которые несут культуру
+    безопасности внутрь, так безопасность масштабируется без раздувания отдельного отдела.</li>
+  </ul>
+
+  <h4>Метрики, которые говорят о здоровье, а не о активности</h4>
+  <table>
+    <tr><th>Метрика</th><th>О чём говорит</th></tr>
+    <tr><td>Доля уязвимостей, закрытых в срок SLA</td><td>Управляемость процесса, а не объём находок</td></tr>
+    <tr><td>Уязвимости, ушедшие в прод (escaped)</td><td>Насколько ранние гейты реально ловят проблемы</td></tr>
+    <tr><td>Время от обнаружения до исправления, MTTR</td><td>Скорость реакции команды</td></tr>
+    <tr><td>Покрытие пайплайнов проверками</td><td>Нет ли сервисов в обход контроля</td></tr>
+    <tr><td>Доля сборок, упавших по безопасности</td><td>Баланс между строгостью и шумом</td></tr>
+  </table>
+
+  <div class="box anti"><span class="lab">Антипаттерн</span>
+  <p>Мерить программу числом найденных уязвимостей. Число растёт и когда стало хуже, и когда
+  просто добавили сканер. Полезны метрики результата, что закрыто в срок и что прорвалось в прод.</p></div>
+
+  <div class="src"><b>Источники.</b>
+    <a href="https://owasp.org/www-project-samm/" target="_blank" rel="noopener">OWASP SAMM</a>,
+    <a href="https://github.com/OWASP/ASVS" target="_blank" rel="noopener">OWASP ASVS</a>,
+    <a href="https://dora.dev/" target="_blank" rel="noopener">DORA Metrics</a>.
+  </div>
+</section>
+
+<!-- ==================== 15 ==================== -->
+<section id="roadmap">
+  <h3><span class="n">15</span> Дорожная карта до уровня сеньор</h3>
+  <p>Сеньор-DevSecOps это не тот, кто знает больше инструментов, а тот, кто выстраивает процесс,
+  которому доверяет команда, и объясняет решения через риск. Ниже ориентир по областям.</p>
+
+  <h4>Что уметь</h4>
+  <ul>
+    <li>Провести моделирование угроз для сервиса и превратить его в конкретные требования.</li>
+    <li>Собрать пайплайн с гейтами SAST, SCA, поиска секретов, скана образов и IaC, настроив
+    границы, что валит сборку, чтобы шум не убивал доверие.</li>
+    <li>Защитить цепочку поставок, SBOM, подпись артефактов, проверка происхождения, доступ по OIDC.</li>
+    <li>Захардить Kubernetes по слоям 4C и закрыть вход admission-политиками.</li>
+    <li>Построить управление секретами без хранения их в коде.</li>
+    <li>Выстроить приоритизацию уязвимостей по KEV, EPSS и CVSS с внятными SLA.</li>
+    <li>Измерять программу метриками результата и говорить с бизнесом на языке риска.</li>
+  </ul>
+
+  <h4>Как внедрять в команде, где DevSecOps нет</h4>
+  <ol>
+    <li>Начните с видимости, включите проверки в режиме предупреждения, не блокируя сборки.
+    Сначала все видят картину.</li>
+    <li>Договоритесь о границе, что именно с этого момента валит сборку, и только тогда включайте
+    блокировку.</li>
+    <li>Уберите шум, настройте правила под проект, чтобы ложных срабатываний было мало, иначе
+    инструменты отключат.</li>
+    <li>Автоматизируйте по одному контролю за раз и закрепляйте, прежде чем добавлять следующий.</li>
+  </ol>
+
+  <div class="box why"><span class="lab">Почему именно так</span>
+  <p>Если начать с жёсткой блокировки и шумных сканеров, команда воспримет безопасность как
+  помеху и найдёт обход. Сначала доверие и малошумные проверки, потом строгость. Это тот же
+  принцип, что безопасность должна быть удобной, из раздела 0.</p></div>
+</section>
+
+<!-- ==================== 16 ==================== -->
+<section id="checklist">
+  <h3><span class="n">16</span> Чек-лист и все источники</h3>
+  <h4>Быстрый чек-лист по продукту</h4>
+  <ul>
+    <li>Есть модель угроз, и по каждому потоку через границу доверия закрыты категории STRIDE.</li>
+    <li>Пре-коммит ловит секреты, ветка main защищена, чувствительные пути в CODEOWNERS.</li>
+    <li>В пул-реквесте гоняются SAST, SCA и поиск секретов, границы гейтов заданы.</li>
+    <li>Зависимости обновляются автоматически, есть SBOM, артефакты подписаны и проверяются.</li>
+    <li>Образы минимальные, не от root, по digest, сканируются до публикации.</li>
+    <li>Права пайплайна минимальны, доступ к облаку по OIDC, внешние экшены закреплены по SHA.</li>
+    <li>IaC проверяется, свои политики через policy as code валят критичное.</li>
+    <li>Kubernetes захардён по 4C, admission-контроль на входе, сеть закрыта по умолчанию.</li>
+    <li>Секретов нет в коде, выдаются в рантайме, есть ротация и план на утечку.</li>
+    <li>Уязвимости приоритизируются по KEV, EPSS, CVSS, есть SLA и метрики результата.</li>
+  </ul>
+
+  <h4>Стандарты и каркасы</h4>
+  <p>
+    <a class="pill" href="https://csrc.nist.gov/pubs/sp/800/218/final" target="_blank" rel="noopener">NIST SSDF 800-218</a>
+    <a class="pill" href="https://csrc.nist.gov/pubs/sp/800/190/final" target="_blank" rel="noopener">NIST 800-190 Containers</a>
+    <a class="pill" href="https://csrc.nist.gov/pubs/sp/800/53/r5/final" target="_blank" rel="noopener">NIST 800-53 r5</a>
+    <a class="pill" href="https://csrc.nist.gov/pubs/sp/800/61/r3/final" target="_blank" rel="noopener">NIST 800-61 IR</a>
+    <a class="pill" href="https://owasp.org/www-project-devsecops-guideline/" target="_blank" rel="noopener">OWASP DevSecOps</a>
+    <a class="pill" href="https://owasp.org/www-project-samm/" target="_blank" rel="noopener">OWASP SAMM</a>
+    <a class="pill" href="https://github.com/OWASP/ASVS" target="_blank" rel="noopener">OWASP ASVS</a>
+    <a class="pill" href="https://owasp.org/www-project-top-ten/" target="_blank" rel="noopener">OWASP Top 10</a>
+    <a class="pill" href="https://github.com/OWASP/API-Security" target="_blank" rel="noopener">OWASP API Top 10</a>
+    <a class="pill" href="https://github.com/OWASP/www-project-top-10-ci-cd-security-risks" target="_blank" rel="noopener">OWASP CI/CD Top 10</a>
+    <a class="pill" href="https://owasp.org/www-project-web-security-testing-guide/" target="_blank" rel="noopener">OWASP WSTG</a>
+    <a class="pill" href="https://slsa.dev/spec/v1.0/levels" target="_blank" rel="noopener">SLSA</a>
+    <a class="pill" href="https://www.cisa.gov/resources-tools/resources/secure-by-design" target="_blank" rel="noopener">CISA Secure by Design</a>
+    <a class="pill" href="https://www.cisecurity.org/benchmark/kubernetes" target="_blank" rel="noopener">CIS Kubernetes</a>
+  </p>
+  <h4>Инструменты</h4>
+  <p>
+    <a class="pill" href="https://semgrep.dev/docs/" target="_blank" rel="noopener">Semgrep</a>
+    <a class="pill" href="https://github.com/gitleaks/gitleaks" target="_blank" rel="noopener">Gitleaks</a>
+    <a class="pill" href="https://trivy.dev/" target="_blank" rel="noopener">Trivy</a>
+    <a class="pill" href="https://github.com/anchore/syft" target="_blank" rel="noopener">Syft</a>
+    <a class="pill" href="https://docs.sigstore.dev/" target="_blank" rel="noopener">Sigstore cosign</a>
+    <a class="pill" href="https://www.openpolicyagent.org/docs/latest/" target="_blank" rel="noopener">OPA</a>
+    <a class="pill" href="https://kyverno.io/" target="_blank" rel="noopener">Kyverno</a>
+    <a class="pill" href="https://kubernetes.io/docs/concepts/security/pod-security-standards/" target="_blank" rel="noopener">Pod Security</a>
+    <a class="pill" href="https://external-secrets.io/latest/" target="_blank" rel="noopener">External Secrets</a>
+    <a class="pill" href="https://falco.org/docs/" target="_blank" rel="noopener">Falco</a>
+    <a class="pill" href="https://renovatebot.com/docs/" target="_blank" rel="noopener">Renovate</a>
+    <a class="pill" href="https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions" target="_blank" rel="noopener">GitHub Actions Hardening</a>
+    <a class="pill" href="https://www.first.org/cvss/" target="_blank" rel="noopener">CVSS</a>
+    <a class="pill" href="https://www.first.org/epss/" target="_blank" rel="noopener">EPSS</a>
+    <a class="pill" href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener">CISA KEV</a>
+  </p>
+
+  <footer>
+    Гайд собран как учебный справочник. Статус утверждений, стандарты и документация инструментов
+    это источник, практические рекомендации это вывод из них. Продуктовые версии инструментов и
+    точные пороги проверяйте по актуальной документации перед применением в проде.
+  </footer>
+</section>
+
+</main>
+</div>
+
+<script>
+(function(){
+  // theme
+  var root=document.documentElement, tb=document.getElementById('themeBtn');
+  try{var t=localStorage.getItem('dsg-theme'); if(t)root.setAttribute('data-theme',t);}catch(e){}
+  tb.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')==='light'?'dark':'light';
+    root.setAttribute('data-theme',cur);
+    try{localStorage.setItem('dsg-theme',cur);}catch(e){}
+  });
+  // mobile menu
+  var side=document.getElementById('side'), mb=document.getElementById('menuBtn');
+  if(mb)mb.addEventListener('click',function(){side.classList.toggle('open');});
+  document.querySelectorAll('#toc a').forEach(function(a){
+    a.addEventListener('click',function(){side.classList.remove('open');});
+  });
+  // copy buttons
+  document.querySelectorAll('figure.code .copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var code=btn.closest('figure').querySelector('code');
+      var txt=code.innerText;
+      navigator.clipboard.writeText(txt).then(function(){
+        var old=btn.textContent; btn.textContent='скопировано'; btn.classList.add('ok');
+        setTimeout(function(){btn.textContent=old; btn.classList.remove('ok');},1400);
+      }).catch(function(){
+        var r=document.createRange(); r.selectNode(code);
+        var s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      });
+    });
+  });
+  // active section in TOC
+  var links=[].slice.call(document.querySelectorAll('#toc a'));
+  var map={}; links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  if('IntersectionObserver' in window){
+    var obs=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){
+          links.forEach(function(a){a.classList.remove('active');});
+          var a=map[en.target.id]; if(a)a.classList.add('active');
+        }
+      });
+    },{rootMargin:'-10% 0px -80% 0px',threshold:0});
+    document.querySelectorAll('section[id]').forEach(function(s){obs.observe(s);});
+  }
+})();
+</script>
+</body>
+</html>

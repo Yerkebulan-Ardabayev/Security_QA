@@ -9,6 +9,7 @@ import { BrowserRouter, HashRouter, Routes, Route } from "react-router-dom";
 const Router = import.meta.env.MODE === "offline" ? HashRouter : BrowserRouter;
 const routerProps = import.meta.env.MODE === "offline" ? {} : { basename: import.meta.env.BASE_URL };
 import Index from "./pages/Index";
+import DevSecOps from "./pages/DevSecOps";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
         <Router {...routerProps}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/devsecops" element={<DevSecOps />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
