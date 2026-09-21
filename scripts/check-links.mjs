@@ -10,6 +10,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -30,6 +31,26 @@ for (const f of fs.readdirSync(CONTENT).filter((f) => f.endsWith('.json')).sort(
   });
 }
 
+// Node проверяет цепочку сертификатов по своему встроенному хранилищу и не
+// догружает недостающий промежуточный сертификат по ссылке из самого сертификата
+// (AIA). Сайты с неполной цепочкой из-за этого падают у Node, хотя в браузере и
+// в curl открываются. Для таких случаев перепроверяем системным клиентом.
+const TLS_CHAIN_ERRORS = new Set([
+  'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+  'UNABLE_TO_GET_ISSUER_CERT',
+  'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+]);
+
+function checkWithCurl(url) {
+  const r = spawnSync(
+    '/usr/bin/curl',
+    ['-s', '-o', '/dev/null', '-L', '-m', '25', '-A', UA, '-w', '%{http_code}', url],
+    { encoding: 'utf8' },
+  );
+  const code = Number.parseInt((r.stdout ?? '').trim(), 10);
+  return Number.isFinite(code) ? code : 0;
+}
+
 async function check(url) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
@@ -41,7 +62,11 @@ async function check(url) {
       await r.body?.cancel();
       if (r.status === 200 || attempt === 2) return { status: r.status, final: r.url };
     } catch (e) {
-      if (attempt === 2) return { status: 'ERR', final: String(e.cause?.code ?? e.name) };
+      const code = String(e.cause?.code ?? e.name);
+      if (TLS_CHAIN_ERRORS.has(code) && checkWithCurl(url) === 200) {
+        return { status: 200, final: url, note: `неполная цепочка сертификатов, проверено системным клиентом (${code})` };
+      }
+      if (attempt === 2) return { status: 'ERR', final: code };
     }
   }
 }
@@ -71,6 +96,12 @@ const lines = [
 if (manual.length) {
   lines.push(`## Проверено вручную в браузере`, ``);
   for (const u of manual) lines.push(`- ${results.get(u).status} ${u} (${MANUAL[u].checked}, «${MANUAL[u].title}»)`);
+  lines.push(``);
+}
+const viaCurl = urls.filter((u) => results.get(u).note);
+if (viaCurl.length) {
+  lines.push(`## Проверено системным клиентом`, ``);
+  for (const u of viaCurl) lines.push(`- ${u} (${results.get(u).note})`);
   lines.push(``);
 }
 if (bad.length) {
