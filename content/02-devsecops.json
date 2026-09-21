@@ -226,7 +226,7 @@
       "text": "Что входит в OWASP API Security Top 10?",
       "answer": "<p>Актуальная редакция 2023 года. API1 Broken Object Level Authorization, то есть отсутствие проверки прав на конкретный объект (тот же IDOR). API2 Broken Authentication. API3 Broken Object Property Level Authorization, когда API отдаёт или позволяет менять поля объекта, которые пользователю не положены, например поле роли. API4 Unrestricted Resource Consumption, отсутствие лимитов. API5 Broken Function Level Authorization, доступ обычного пользователя к административным функциям.</p>\n<p>API6 Unrestricted Access to Sensitive Business Flows, злоупотребление бизнес-процессом через автоматизацию, например скупка товара ботами. API7 Server Side Request Forgery. API8 Security Misconfiguration. API9 Improper Inventory Management, забытые старые версии API и недокументированные эндпоинты. API10 Unsafe Consumption of APIs, слепое доверие данным от сторонних API.</p>\n<p>Заметно, что три пункта из десяти касаются авторизации. Для API это главная проблема, потому что каждый эндпоинт и каждое поле нужно защищать отдельно. На практике помогают централизованная проверка прав, явные схемы ответов вместо сериализации объекта целиком, инвентарь API по спецификациям OpenAPI и лимиты на шлюзе.</p>",
       "sources": [
-        "https://owasp.org/API-Security/editions/2023/en/0x11-t10/"
+        "https://github.com/OWASP/API-Security/blob/master/editions/2023/en/0x11-t10.md"
       ]
     },
     {
