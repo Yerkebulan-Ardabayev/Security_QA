@@ -15,6 +15,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CONTENT = path.join(ROOT, 'content');
 const REPORT = path.join(ROOT, '_reports/links.md');
+// Адреса, проверенные вручную в браузере (сайты блокируют скрипты). См. сам файл.
+const MANUAL = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/browser-verified.json'), 'utf8'));
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128 Safari/537.36';
 
 const usage = new Map(); // url -> [где встречается]
@@ -57,14 +59,20 @@ await Promise.all(
   }),
 );
 
-const bad = urls.filter((u) => results.get(u).status !== 200);
+const manual = urls.filter((u) => results.get(u).status !== 200 && MANUAL[u]);
+const bad = urls.filter((u) => results.get(u).status !== 200 && !MANUAL[u]);
 const lines = [
   `# Проверка ссылок`,
   ``,
   `Дата: ${new Date().toISOString().slice(0, 10)}`,
-  `Всего уникальных ссылок: ${urls.length}, код 200: ${urls.length - bad.length}, проблемных: ${bad.length}.`,
+  `Всего уникальных ссылок: ${urls.length}, код 200: ${urls.length - bad.length - manual.length}, проверено вручную в браузере: ${manual.length}, проблемных: ${bad.length}.`,
   ``,
 ];
+if (manual.length) {
+  lines.push(`## Проверено вручную в браузере`, ``);
+  for (const u of manual) lines.push(`- ${results.get(u).status} ${u} (${MANUAL[u].checked}, «${MANUAL[u].title}»)`);
+  lines.push(``);
+}
 if (bad.length) {
   lines.push(`## Проблемные`, ``);
   for (const u of bad) {

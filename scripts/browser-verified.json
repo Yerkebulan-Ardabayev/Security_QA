@@ -1,0 +1,9 @@
+{
+  "_comment": "Сайты, которые отвечают скриптам 403/202, но открываются в браузере. Каждый адрес открыт вручную во встроенном браузере, указан заголовок страницы. Проверка ссылок считает их рабочими и перечисляет отдельно.",
+  "https://www.iso.org/standard/27001": { "checked": "2026-09-21", "title": "ISO/IEC 27001:2022 - Information security management systems" },
+  "https://www.iso.org/standard/75652.html": { "checked": "2026-09-21", "title": "ISO/IEC 27002:2022 - Information security controls" },
+  "https://www.iso.org/standard/77802.html": { "checked": "2026-09-21", "title": "ISO/IEC 27007:2020 - Guidelines for ISMS auditing" },
+  "https://www.iso.org/obp/ui/en/#iso:std:iso-iec:27001:ed-3:v1:en": { "checked": "2026-09-21", "title": "ISO/IEC 27001:2022(en), предпросмотр с оглавлением" },
+  "https://www.iso.org/obp/ui/en/#iso:std:iso-iec:27002:ed-3:v2:en": { "checked": "2026-09-21", "title": "ISO/IEC 27002:2022(en), предпросмотр с оглавлением" },
+  "https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng": { "checked": "2026-09-21", "title": "Regulation - 2016/679 - EN - gdpr - EUR-Lex" }
+}
