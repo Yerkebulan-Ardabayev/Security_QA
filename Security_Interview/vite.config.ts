@@ -3,8 +3,14 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  base: process.env.NODE_ENV === "production" ? "/Security_QA/" : "/",
+// Режим offline собирает сайт для открытия из папки по file://, без сервера:
+// относительные пути и весь код в одном файле (скрипт inline-offline.mjs).
+export default defineConfig(({ mode }) => ({
+  base: mode === "offline" ? "./" : process.env.NODE_ENV === "production" ? "/Security_QA/" : "/",
+  build:
+    mode === "offline"
+      ? { outDir: "dist-offline", assetsInlineLimit: 100_000_000, rollupOptions: { output: { inlineDynamicImports: true } } }
+      : {},
   server: {
     host: "::",
     port: 8080,
@@ -18,4 +24,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-});
+}));

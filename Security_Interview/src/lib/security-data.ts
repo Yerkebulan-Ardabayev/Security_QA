@@ -17,8 +17,12 @@ export interface SecurityData {
 }
 
 export async function loadSecurityData(): Promise<SecurityData> {
-  const resp = await fetch(`${import.meta.env.BASE_URL}Security_Interview.html`);
-  const html = await resp.text();
+  // Из папки (file://) fetch запрещён браузером, поэтому офлайн-сборка
+  // встраивает корпус в бандл, а сайт по-прежнему грузит его по сети.
+  const html =
+    import.meta.env.MODE === 'offline'
+      ? (await import('../../public/Security_Interview.html?raw')).default
+      : await (await fetch(`${import.meta.env.BASE_URL}Security_Interview.html`)).text();
   
   // Extract the script content
   const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
