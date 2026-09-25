@@ -131,27 +131,58 @@ describe('источники и стиль', () => {
 
 describe('практические разделы дают команды', () => {
   // Сайт готовит к учёбе и работе, а не только к разговору на собеседовании.
-  // В практических разделах должно быть не меньше указанного числа ответов
-  // с реальной командой (<pre><code> или инлайновый <code>). Порог намеренно
-  // ниже фактического покрытия: он стережёт от возврата к чисто описательным
-  // ответам, но не заставляет вставлять команду в концептуальный вопрос.
-  const MIN_WITH_CODE: Record<string, number> = {
-    'Основы безопасности': 20,
-    'DevSecOps и AppSec': 20,
-    'Безопасность облака, контейнеров и Kubernetes': 20,
+  // Командой считается только блок <pre>. Инлайновый <code> с именем поля
+  // (hostPID, 0.0.0.0/0) раньше засчитывался и прятал раздел, где настоящая
+  // команда была одна на 35 ответов (аудит 25.09.2026).
+  const MIN_WITH_PRE: Record<string, number> = {
+    'Основы безопасности': 15,
+    'DevSecOps и AppSec': 18,
+    'Безопасность облака, контейнеров и Kubernetes': 15,
     'Blue team и SOC': 15,
     'DFIR и форензика': 12,
+    // TODO(25.09.2026): раздел 07 не переписан, генерация нового текста для
+    // него останавливается фильтром безопасности модели. Порог возвращается
+    // к 12, когда раздел будет доработан вручную.
     'Пентест и offensive-основы': 5,
   };
 
-  const withCode = (category: string) =>
-    data.questions.filter((q) => q.category === category && /<pre|<code/.test(q.answer)).length;
+  const withPre = (category: string) =>
+    data.questions.filter((q) => q.category === category && /<pre[\s>]/.test(q.answer)).length;
 
-  for (const [category, min] of Object.entries(MIN_WITH_CODE)) {
-    it(`«${category}»: не меньше ${min} ответов с командой`, () => {
+  for (const [category, min] of Object.entries(MIN_WITH_PRE)) {
+    it(`«${category}»: не меньше ${min} ответов с блоком команды`, () => {
       // Раздел должен существовать, иначе опечатка в названии тихо пройдёт.
       expect(data.categories).toContain(category);
-      expect(withCode(category)).toBeGreaterThanOrEqual(min);
+      expect(withPre(category)).toBeGreaterThanOrEqual(min);
     });
   }
+});
+
+describe('ответ выдерживает уточняющие вопросы', () => {
+  // Аудит 25.09.2026: большинство ответов были верны, но разваливались на
+  // втором вопросе интервьюера. Каждый ответ обязан закрываться блоком
+  // «Уточняющие вопросы» минимум с тремя парами «вопрос, короткий ответ».
+  const FOLLOWUPS = /<h4>Уточняющие вопросы<\/h4>\s*<ul>([\s\S]*?)<\/ul>/;
+  // TODO(25.09.2026): раздел 07 временно без блока, причина у порога команд выше.
+  const PENDING = new Set(['Пентест и offensive-основы']);
+  const checked = () => data.questions.filter((q) => !PENDING.has(q.category));
+
+  it('у каждого ответа есть блок уточняющих вопросов', () => {
+    expect(checked().filter((q) => !FOLLOWUPS.test(q.answer)).map((q) => q.num)).toEqual([]);
+  });
+
+  it('в блоке не меньше трёх уточняющих вопросов с ответом', () => {
+    const thin = checked().filter((q) => {
+      const m = q.answer.match(FOLLOWUPS);
+      if (!m) return false;
+      const items = m[1].match(/<li>[\s\S]*?<\/li>/g) ?? [];
+      // Пункт это вопрос в <strong> и ответ после него, не голый вопрос.
+      const full = items.filter((li) => {
+        const m = li.match(/^<li>\s*<strong>[^<]+\?<\/strong>([\s\S]*)<\/li>$/);
+        return m !== null && m[1].replace(/<[^>]+>/g, '').trim().length >= 10;
+      });
+      return full.length < 3;
+    });
+    expect(thin.map((q) => q.num)).toEqual([]);
+  });
 });

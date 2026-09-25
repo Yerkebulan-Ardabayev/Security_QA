@@ -1,0 +1,9 @@
+{
+  "why": "Готово, когда корпус собран из content/, тесты корпуса и поиска зелёные, линтер без ошибок и сайт собирается.",
+  "budget": 120,
+  "gates": [
+    {"name": "corpus+tests", "kind": "tests", "run": "node scripts/build-corpus.mjs && cd Security_Interview && npx vitest run"},
+    {"name": "lint", "kind": "build", "run": "cd Security_Interview && npx eslint ."},
+    {"name": "build", "kind": "build", "run": "cd Security_Interview && npx vite build"}
+  ]
+}
