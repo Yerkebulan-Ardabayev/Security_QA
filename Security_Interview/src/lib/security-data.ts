@@ -192,13 +192,25 @@ export function searchQuestions(data: SecurityData, query: string): Question[] {
 
   const userTerms = [...userSet];
 
+  const docs = data.questions.map((q) => ({
+    q,
+    title: q.text.toLowerCase(),
+    cat: q.category.toLowerCase(),
+    body: stripHtml(q.answer).toLowerCase(),
+  }));
+
+  // Редкий термин весит больше частого (IDF). Без этого «сием корреляция»
+  // отдавало первым общий вопрос про SIEM: слово siem есть в десятках ответов,
+  // а «корреляция» в нескольких, и именно она задаёт смысл запроса.
+  const rarity = new Map<string, number>();
+  for (const t of allTerms) {
+    const df = docs.filter((d) => d.title.includes(t) || d.cat.includes(t) || d.body.includes(t)).length;
+    rarity.set(t, df === 0 ? 0 : 1 + Math.log(docs.length / df));
+  }
+
   const scored: { q: Question; score: number }[] = [];
 
-  for (const q of data.questions) {
-    const title = q.text.toLowerCase();
-    const cat = q.category.toLowerCase();
-    const body = stripHtml(q.answer).toLowerCase();
-
+  for (const { q, title, cat, body } of docs) {
     let score = 0;
     let matchedUserTerms = 0;
 
@@ -213,12 +225,15 @@ export function searchQuestions(data: SecurityData, query: string): Question[] {
       if (!inTitle && !inCat && !inBody) continue;
 
       // Вес по расположению
-      if (inTitle) score += 5 * multiplier;
-      if (inCat) score += 3 * multiplier;
-      if (inBody) score += 1 * multiplier;
+      let termScore = 0;
+      if (inTitle) termScore += 5 * multiplier;
+      if (inCat) termScore += 3 * multiplier;
+      if (inBody) termScore += 1 * multiplier;
 
       // Security-термин в заголовке — бонус
-      if (inTitle && SECURITY_KEYWORDS.has(t)) score += 10;
+      if (inTitle && SECURITY_KEYWORDS.has(t)) termScore += 10;
+
+      score += termScore * (rarity.get(t) ?? 1);
 
       if (isUser) matchedUserTerms++;
     }

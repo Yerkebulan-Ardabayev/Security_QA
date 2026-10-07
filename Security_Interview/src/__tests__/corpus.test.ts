@@ -9,6 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { searchQuestions } from '@/lib/security-data';
 
 interface Question {
   id: number;
@@ -179,5 +180,21 @@ describe('ответ выдерживает уточняющие вопросы'
       return full.length < 3;
     });
     expect(thin.map((q) => q.num)).toEqual([]);
+  });
+});
+
+describe('сценарии из spec.md на живом корпусе', () => {
+  it('сценарий 2: «сием корреляция» первым даёт вопрос про корреляцию событий', () => {
+    // Общий вопрос «Что такое SIEM» встречает слово siem в заголовке и получал
+    // бонус за security-термин, а редкость слова «корреляция» не учитывалась.
+    const res = searchQuestions(data, 'сием корреляция');
+    expect(res[0]?.text.toLowerCase()).toContain('корреляция');
+  });
+
+  it('сценарий 3: вопрос о трансграничной передаче ПДн ведёт на adilet', () => {
+    const q = searchQuestions(data, 'трансграничная передача')[0];
+    expect(q?.text).toMatch(/трансграничн/i);
+    expect(q?.answer).toMatch(/стать[яи] 16/i);
+    expect(q?.sources?.some((u) => u.startsWith('https://adilet.zan.kz/'))).toBe(true);
   });
 });
